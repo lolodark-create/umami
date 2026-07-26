@@ -138,9 +138,10 @@ textarea{
   pointer-events:none; /* ne doit jamais bloquer le bouton SUITE qui se trouve dessous */
   width:min(440px,calc(100% - 28px));
   background:var(--panel2); border:3px solid var(--ink); border-radius:12px;
-  box-shadow:0 7px 0 var(--ink); padding:10px 12px; transition:transform .28s cubic-bezier(.2,1.3,.4,1);
+  box-shadow:0 7px 0 var(--ink); padding:10px 12px; opacity:0;
+  transition:transform .28s cubic-bezier(.2,1.3,.4,1), opacity .18s;
 }
-#toast.show{transform:translate(-50%,0)}
+#toast.show{transform:translate(-50%,0); opacity:1}
 #toast .t{font-family:var(--body); font-weight:900; font-size:13px; color:var(--yellow); line-height:1.25}
 #toast .s{font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:4px; line-height:1.4}
 
