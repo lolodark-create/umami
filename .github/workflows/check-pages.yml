@@ -3,7 +3,7 @@ name: Check pages status
 on:
   push:
     paths: ['.github/workflows/check-pages.yml']
-  workflow_dispatch
+  workflow_dispatch:
 
 permissions:
   contents: write
