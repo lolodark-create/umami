@@ -1,6 +1,0 @@
-{
-  "framework": null,
-  "installCommand": "echo no dependencies",
-  "buildCommand": "echo static site, nothing to build",
-  "outputDirectory": "site"
-}
