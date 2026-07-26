@@ -97,6 +97,24 @@ h2{font-family:var(--title); font-weight:700; font-size:22px; line-height:1.1; m
 .opt:nth-child(4n+4){background:var(--magenta)}
 .opt .lab{display:block; font-size:15px; letter-spacing:.01em; line-height:1.15}
 .opt .sub{display:block; font-family:var(--mono); font-weight:400; font-size:11.5px; line-height:1.4; margin-top:5px; color:#000000cc}
+/* pastilles de jeu : même couleur pour un même jeu sur les 4 jours */
+.chips{display:flex; flex-wrap:wrap; gap:5px; margin-top:7px}
+.chip{
+  font-family:var(--mono); font-size:9.5px; font-weight:400; letter-spacing:.04em;
+  background:#000; border:2px solid currentColor; border-radius:5px; padding:2px 6px; line-height:1.35;
+}
+.chip .ph{color:#fff; font-weight:700}
+.opt .giveup{
+  display:block; font-family:var(--mono); font-size:11px; line-height:1.4; margin-top:8px;
+  background:#000; color:#fff; border-radius:6px; padding:6px 8px;
+}
+/* rappel compact des jours déjà verrouillés */
+.locked{
+  font-family:var(--mono); font-size:10.5px; line-height:1.6; color:var(--dim);
+  border:2px solid #ffffff1f; border-radius:8px; padding:7px 9px; margin:0 0 12px;
+}
+.locked b{color:var(--lime); font-weight:400}
+.locked .r{display:block}
 .opt:hover,.btn:hover{filter:brightness(1.06)}
 .opt:active,.btn:active{transform:translateY(5px); box-shadow:0 1px 0 var(--ink)}
 .opt.on{outline:3px solid var(--white); outline-offset:2px}
@@ -226,6 +244,32 @@ const CONFIG = {
   partie: '4 JOURS — 4 SCÈNES',
   joueur: 'AlexandreScogna64',
   hote: 'Lolodark',
+
+  // une couleur par jeu, identique sur les 4 jours
+  jeux: {
+    'Rocket League':'#28dcf0', 'Rainbow Six':'#ff4fd8', 'Échecs':'#e6e6f2',
+    'PUBG Mobile':'#ffcf1f', 'Fan Fest':'#b8f52b'
+  },
+
+  // Composition de chaque option : [jeu, niveau].
+  // Le niveau n'est renseigné que là où le sous-titre le nomme explicitement.
+  tags: {
+    j1a:[['Rocket League'],['Rainbow Six']],
+    j1b:[['Échecs'],['Rainbow Six']],
+    j1c:[['Rocket League']],
+    j1d:[['Fan Fest']],
+    j2a:[['Rocket League'],['Rainbow Six']],
+    j2b:[['PUBG Mobile'],['Rainbow Six']],
+    j2c:[['Échecs','PLAYOFFS']],
+    j2d:[['Fan Fest']],
+    j3a:[['PUBG Mobile'],['Rainbow Six','FINALE']],
+    j3b:[['Échecs','FINALE'],['Rainbow Six','FINALE']],
+    j3c:[['Rainbow Six','FINALE']],
+    j3d:[['Rocket League','DEMI-FINALES']],
+    j4a:[['Rocket League','GRANDE FINALE']],
+    j4b:[['PUBG Mobile','GRANDE FINALE'],['Rocket League','FINALE']],
+    j4c:[['PUBG Mobile','GRANDE FINALE']]
+  },
 
   astuces: [
     'Astuce : on ne peut pas se téléporter entre deux arènes.',
@@ -436,12 +480,29 @@ function vueRegle(){
   </div>`;
 }
 
+function chips(id){
+  const t = CONFIG.tags[id];
+  if (!t) return '';
+  return `<span class="chips">` + t.map(([jeu, niveau]) =>
+    `<span class="chip" style="color:${CONFIG.jeux[jeu]}">${esc(jeu)}${
+       niveau ? ` <span class="ph">${esc(niveau)}</span>` : ''}</span>`).join('') + `</span>`;
+}
+
 function vueEcran(e){
   const choisi = answers[e.id];
   const opts = e.options.map(o =>
     `<button class="opt${choisi === o.id ? ' on' : ''}" data-pick="${o.id}" aria-pressed="${choisi === o.id}">
-       <span class="lab">${esc(o.label)}</span><span class="sub">${esc(o.sub)}</span>
+       <span class="lab">${esc(o.label)}</span>${chips(o.id)}<span class="sub">${esc(o.sub)}</span>${
+       choisi === o.id && o.sacrifie ? `<span class="giveup">Tu sacrifies ${esc(o.sacrifie)}.</span>` : ''}
      </button>`).join('');
+
+  // rappel des jours déjà verrouillés, pour comparer d'un écran à l'autre
+  const faits = CONFIG.ecrans.filter(x => x.monde && x.id !== e.id && answers[x.id]);
+  const rappel = faits.length ? `<div class="locked">${faits.map(x => {
+    const o = opt(x, answers[x.id]);
+    const noms = (CONFIG.tags[o.id] || []).map(([j, n]) => j + (n ? ' ' + n : '')).join(' · ');
+    return `<span class="r"><b>${esc(x.jour)}</b> — ${esc(noms)}</span>`;
+  }).join('')}</div>` : '';
 
   const tete = e.monde
     ? `<span class="badge">${esc(e.monde)}${e.tag ? ' — ' + esc(e.tag) : ''}</span>
@@ -455,6 +516,7 @@ function vueEcran(e){
 
   return `<div class="card">
     <div class="head"><div class="head-txt">${tete}</div>${blocky(false)}</div>
+    ${rappel}
     <p class="q">${esc(e.question)}</p>
     ${opts}
     ${e.note ? `<p class="note">${esc(e.note)}</p>` : ''}
@@ -471,7 +533,7 @@ function ligneRecap(e){
   if (!o) return '';
   const k = e.monde ? e.jour : (e.id === 'placement' ? 'PLACEMENT' : 'MISSION PERSO');
   // seuls les jours portent des horaires ; placement et mission se suffisent à leur libellé
-  const detail = e.monde ? `<div class="d">${esc(o.recap)}</div>` : '';
+  const detail = e.monde ? `${chips(o.id)}<div class="d">${esc(o.recap)}</div>` : '';
   return `<div class="line"><div class="k">${esc(k)}</div>
     <div class="v">${esc(o.label)}</div>${detail}</div>`;
 }
