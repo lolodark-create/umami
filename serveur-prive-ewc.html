@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SERVEUR PRIVÉ — EWC-PARIS-01</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@800;900&display=swap">
+<style>
+/* ============ PALETTE & BASE ============ */
+:root{
+  --bg:#0e0e18; --panel:#1b1b2c; --panel2:#25253c;
+  --lime:#b8f52b; --cyan:#28dcf0; --yellow:#ffcf1f; --magenta:#ff4fd8;
+  --ink:#000; --white:#fff; --dim:#a8a8c4;
+  --title:'Fredoka',system-ui,'Segoe UI',Arial,sans-serif;
+  --body:'Nunito',system-ui,'Segoe UI',Arial,sans-serif;
+  --mono:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;max-width:100%;overflow-x:hidden}
+body{
+  background:var(--bg); color:var(--white); font-family:var(--body); font-weight:800;
+  min-height:100dvh; -webkit-text-size-adjust:100%;
+}
+/* fond à studs, très discret et lentement animé */
+#studs{
+  position:fixed; inset:-40px; z-index:0; pointer-events:none; opacity:.5;
+  background-image:
+    radial-gradient(circle at 6px 6px, rgba(255,255,255,.055) 3.5px, transparent 4px),
+    radial-gradient(circle at 6px 6px, rgba(0,0,0,.5) 4.5px, transparent 5px);
+  background-size:26px 26px; background-position:0 0, 1px 2px;
+  animation:drift 40s linear infinite;
+}
+@keyframes drift{to{background-position:26px 26px, 27px 28px}}
+
+.wrap{position:relative; z-index:1; max-width:520px; margin:0 auto; padding:0 14px 96px}
+
+/* ============ HUD ============ */
+header.top{
+  position:sticky; top:0; z-index:20; padding:10px 0 8px;
+  background:linear-gradient(180deg,var(--bg) 72%,transparent);
+  display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+}
+.srv{font-family:var(--mono); font-size:10px; color:var(--lime); line-height:1.5; padding-top:2px}
+.srv b{display:block; color:var(--dim); font-weight:400}
+.hud{
+  font-family:var(--mono); font-size:11px; line-height:1.45; color:var(--white);
+  border:2px solid var(--ink); background:#000c; padding:5px 8px; border-radius:6px;
+  box-shadow:0 3px 0 var(--ink); white-space:nowrap;
+}
+.hud table{border-collapse:collapse}
+.hud td{padding:0 0 0 10px}
+.hud td:first-child{padding:0}
+.hud .h{color:var(--dim); font-size:9px; letter-spacing:.08em}
+.hud .v{color:var(--lime)} .hud .v2{color:var(--cyan)}
+
+/* barre d'XP */
+.xp{margin:2px 0 14px}
+.xp-lab{font-family:var(--mono); font-size:9px; color:var(--dim); display:flex; justify-content:space-between; margin-bottom:4px}
+.xp-bar{height:14px; border:2px solid var(--ink); border-radius:8px; background:#000; box-shadow:0 3px 0 var(--ink); overflow:hidden}
+.xp-fill{height:100%; width:0; border-radius:6px 0 0 6px;
+  background:linear-gradient(90deg,var(--cyan),var(--lime)); transition:width .35s cubic-bezier(.2,.9,.3,1)}
+
+/* ============ CARTE ============ */
+.card{
+  background:var(--panel); border:3px solid var(--ink); border-radius:14px;
+  box-shadow:0 8px 0 var(--ink); padding:16px 14px; margin-bottom:14px;
+}
+.head{display:flex; gap:10px; align-items:flex-start}
+.head-txt{flex:1; min-width:0}
+.badge{
+  display:inline-block; font-family:var(--mono); font-size:10px; letter-spacing:.1em;
+  background:var(--magenta); color:var(--ink); border:2px solid var(--ink);
+  padding:2px 7px; border-radius:5px; margin-bottom:7px;
+}
+.badge.alt{background:var(--yellow)}
+h1{font-family:var(--title); font-weight:700; font-size:26px; line-height:1.05; margin:0 0 4px; color:var(--lime)}
+h2{font-family:var(--title); font-weight:700; font-size:22px; line-height:1.1; margin:0 0 4px}
+.open{font-family:var(--mono); font-size:11px; color:var(--cyan); margin:0 0 2px}
+.q{font-size:15px; margin:12px 0 12px; color:var(--white); line-height:1.35}
+.note{
+  font-family:var(--mono); font-size:11px; line-height:1.5; color:var(--dim);
+  border-left:3px solid var(--yellow); padding:6px 0 6px 9px; margin-top:12px;
+}
+
+/* ============ BOUTONS PAVÉ 3D ============ */
+.opt,.btn{
+  font-family:var(--body); font-weight:900; color:var(--ink);
+  border:3px solid var(--ink); border-radius:11px; cursor:pointer;
+  box-shadow:0 6px 0 var(--ink); transition:transform .06s, box-shadow .06s, filter .12s;
+  text-align:left; width:100%; display:block;
+}
+.opt{background:var(--cyan); padding:11px 13px; margin-bottom:11px; min-height:56px}
+.opt:nth-child(4n+2){background:var(--lime)}
+.opt:nth-child(4n+3){background:var(--yellow)}
+.opt:nth-child(4n+4){background:var(--magenta)}
+.opt .lab{display:block; font-size:15px; letter-spacing:.01em; line-height:1.15}
+.opt .sub{display:block; font-family:var(--mono); font-weight:400; font-size:11.5px; line-height:1.4; margin-top:5px; color:#000000cc}
+.opt:hover,.btn:hover{filter:brightness(1.06)}
+.opt:active,.btn:active{transform:translateY(5px); box-shadow:0 1px 0 var(--ink)}
+.opt.on{outline:3px solid var(--white); outline-offset:2px}
+:focus-visible{outline:3px solid var(--white); outline-offset:3px}
+
+.btn{background:var(--lime); padding:14px 16px; font-size:15px; text-align:center; min-height:52px}
+.btn.cy{background:var(--cyan)} .btn.ye{background:var(--yellow)} .btn.mg{background:var(--magenta)}
+.btn.ghost{background:var(--panel2); color:var(--white); box-shadow:0 5px 0 var(--ink); font-size:13px; min-height:48px}
+.row{display:flex; gap:10px} .row>*{flex:1}
+
+/* ============ CHAT SERVEUR ============ */
+.chat{font-family:var(--mono); font-size:12px; line-height:1.65; color:var(--dim); margin:0}
+.chat .sys{color:var(--cyan)}
+.chat .you{color:var(--lime)}
+.chat .hi{color:var(--yellow)}
+.caret{display:inline-block; width:8px; background:var(--lime); animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ============ CHAMP TEXTE ============ */
+label.fl{display:block; font-size:14px; margin:16px 0 7px}
+textarea{
+  width:100%; min-height:84px; resize:vertical; font-family:var(--mono); font-size:13px;
+  background:#0b0b14; color:var(--white); border:3px solid var(--ink); border-radius:11px;
+  padding:10px; box-shadow:0 5px 0 var(--ink);
+}
+.count{font-family:var(--mono); font-size:10px; color:var(--dim); text-align:right; margin-top:5px}
+
+/* ============ RÉCAP ============ */
+.rec{border:3px solid var(--ink); border-radius:11px; background:#0b0b14; padding:12px; box-shadow:0 5px 0 var(--ink)}
+.rec .line{padding:9px 0; border-bottom:2px dashed #ffffff20}
+.rec .line:last-child{border:0; padding-bottom:0}
+.rec .k{font-family:var(--mono); font-size:10px; letter-spacing:.1em; color:var(--cyan)}
+.rec .v{font-size:14.5px; margin-top:3px; color:var(--lime)}
+.rec .d{font-family:var(--mono); font-weight:400; font-size:11.5px; color:var(--dim); margin-top:3px; line-height:1.5}
+
+/* ============ TOAST ============ */
+#toast{
+  position:fixed; left:50%; bottom:52px; transform:translate(-50%,140%); z-index:60;
+  pointer-events:none; /* ne doit jamais bloquer le bouton SUITE qui se trouve dessous */
+  width:min(440px,calc(100% - 28px));
+  background:var(--panel2); border:3px solid var(--ink); border-radius:12px;
+  box-shadow:0 7px 0 var(--ink); padding:10px 12px; transition:transform .28s cubic-bezier(.2,1.3,.4,1);
+}
+#toast.show{transform:translate(-50%,0)}
+#toast .t{font-family:var(--body); font-weight:900; font-size:13px; color:var(--yellow); line-height:1.25}
+#toast .s{font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:4px; line-height:1.4}
+
+/* ============ TICKER ============ */
+#ticker{
+  position:fixed; left:0; right:0; bottom:0; z-index:50;
+  background:#000; border-top:3px solid #ffffff1a; padding:9px 14px;
+  font-family:var(--mono); font-size:11px; color:var(--dim);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+#ticker b{color:var(--lime); font-weight:400}
+
+/* ============ PERSONNAGE BLOC ============ */
+.blocky{width:86px; height:104px; flex:0 0 auto; overflow:visible}
+.blocky.big{width:120px; height:146px}
+.bk-all{animation:bob 2.6s ease-in-out infinite; transform-box:fill-box; transform-origin:50% 100%}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.blocky rect,.blocky ellipse,.blocky path{stroke:#000; stroke-width:3; stroke-linejoin:round}
+.bk-skin{fill:var(--yellow)} .bk-shirt{fill:var(--cyan)} .bk-pants{fill:var(--magenta)}
+.bk-eye,.bk-mouth,.bk-brow{fill:#000; stroke:none}
+.bk-arm,.bk-eye,.bk-mouth,.bk-brow,.bk-all{transform-box:fill-box}
+.bk-arm{transform-origin:50% 8%; transition:transform .3s cubic-bezier(.2,1.4,.4,1)}
+.bk-eye{transform-origin:50% 50%; transition:transform .2s}
+.bk-mouth{transform-origin:50% 50%; transition:transform .25s}
+.bk-brow{opacity:0; transition:opacity .2s}
+/* humeurs */
+.m-hype .bk-arm-l{transform:rotate(-155deg)}
+.m-hype .bk-arm-r{transform:rotate(155deg)}
+.m-hype .bk-mouth{transform:scale(1.35,1.9)}
+.m-hype .bk-eye{transform:scale(1.15,1.15)}
+.m-focus .bk-arm-l{transform:rotate(-16deg)}
+.m-focus .bk-arm-r{transform:rotate(16deg)}
+.m-focus .bk-eye{transform:scale(1,.4)}
+.m-focus .bk-mouth{transform:scale(.55,.5)}
+.m-focus .bk-brow{opacity:1}
+.m-chill .bk-arm-l{transform:rotate(10deg)}
+.m-chill .bk-arm-r{transform:rotate(-10deg)}
+.m-chill .bk-mouth{transform:scale(.8,.7)}
+.pop{animation:pop .34s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:scale(1,1)}35%{transform:scale(1.14,.86)}70%{transform:scale(.94,1.08)}100%{transform:scale(1,1)}}
+
+.center{text-align:center}
+.mini{font-family:var(--mono); font-size:10.5px; color:var(--dim); line-height:1.6}
+.big-rule{font-family:var(--title); font-weight:700; font-size:27px; line-height:1.12; color:var(--yellow); margin:6px 0 14px}
+.hidden{display:none !important}
+
+@media (max-width:360px){
+  h1{font-size:22px} .hud{font-size:10px} .opt .lab{font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
+}
+</style>
+</head>
+<body>
+<div id="studs"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="srv" id="srvTag"></div>
+    <div class="hud" id="hud" aria-live="off"></div>
+  </header>
+
+  <div class="xp" id="xpWrap">
+    <div class="xp-lab"><span>XP</span><span id="xpTxt"></span></div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+  </div>
+
+  <main id="app" aria-live="polite"></main>
+</div>
+
+<div id="toast" role="status" aria-live="polite"><div class="t"></div><div class="s"></div></div>
+<div id="ticker" aria-hidden="true"></div>
+
+<script>
+/* =====================================================================
+   CONFIG — toutes les données du séjour vivent ici.
+   Corriger un horaire ici suffit : rien d'autre à toucher dans le code.
+   ===================================================================== */
+const CONFIG = {
+  serveur: 'EWC-PARIS-01',
+  partie: '4 JOURS — 4 SCÈNES',
+  joueur: 'AlexandreScogna64',
+  hote: 'Lolodark',
+
+  astuces: [
+    'Astuce : on ne peut pas se téléporter entre deux arènes.',
+    'Astuce : le pseudo « Lolodark » date. On en reparlera jamais.',
+    'Astuce : le samedi, quatre scènes tournent en même temps. Bon courage.'
+  ],
+
+  ecrans: [
+    {
+      id:'j1', monde:'MONDE 1', mondeNum:1, jour:'JEU 13 AOÛT',
+      titre:'JEUDI 13 AOÛT', ouverture:'Site ouvert 10h → 22h',
+      question:'Premier jour, premier coup. Tu poses quoi ?',
+      note:'PUBG Mobile ne joue pas ce jour-là.',
+      options:[
+        {id:'j1a', label:'⚡ DOUBLE COMBO', sub:"Rocket League 13h→18h15, puis Rainbow Six 18h15→22h. 9 h d'arène.",
+         recap:'Rocket League 13h→18h15, puis Rainbow Six 18h15→22h', mood:'hype', sacrifie:'les échecs'},
+        {id:'j1b', label:'♟️ CERVEAU, PUIS GÂCHETTE', sub:'Échecs 13h→19h50, puis Rainbow Six 19h50→22h',
+         recap:'Échecs 13h→19h50, puis Rainbow Six 19h50→22h', mood:'focus', sacrifie:'Rocket League'},
+        {id:'j1c', label:'🚗 SOLO QUEUE', sub:'Rocket League 13h→18h15. Soirée libre.',
+         recap:'Rocket League 13h→18h15', mood:'chill', sacrifie:'Rainbow Six'},
+        {id:'j1d', label:'🕹️ MODE FREE PLAY', sub:'Zéro match. Manette toute la journée au Fan Fest.',
+         recap:'Fan Fest toute la journée, zéro match', mood:'chill', sacrifie:"tous les matchs de la journée"}
+      ]
+    },
+    {
+      id:'j2', monde:'MONDE 2', mondeNum:2, jour:'VEN 14 AOÛT',
+      titre:'VENDREDI 14 AOÛT', ouverture:'Site ouvert 10h → 22h',
+      question:'Trois scènes démarrent à 13h pile. Tu marches vers laquelle ?',
+      note:'Rocket League, PUBG Mobile et les échecs démarrent tous à 13h. Impossible d\'en voir deux.',
+      options:[
+        {id:'j2a', label:'🔥 ENCHAÎNEMENT PARFAIT', sub:'Rocket League 13h→19h15, puis Rainbow Six 19h15→22h',
+         recap:'Rocket League 13h→19h15, puis Rainbow Six 19h15→22h', mood:'hype', sacrifie:'PUBG Mobile et les échecs'},
+        {id:'j2b', label:'📱 DROP MOBILE + SIÈGE DE NUIT', sub:'PUBG Mobile 13h→17h50, puis 4 h de Rainbow Six',
+         recap:'PUBG Mobile 13h→17h50, puis 4 h de Rainbow Six', mood:'hype', sacrifie:'Rocket League'},
+        {id:'j2c', label:'🧠 TRYHARD ÉCHECS', sub:'Playoffs 13h→21h30. 8 h 30. Aucune pause.',
+         recap:'Échecs, playoffs 13h→21h30', mood:'focus', sacrifie:'Rainbow Six'},
+        {id:'j2d', label:'🕹️ MODE FREE PLAY', sub:'Fan Fest, toute la journée',
+         recap:'Fan Fest toute la journée', mood:'chill', sacrifie:'les trois scènes en même temps'}
+      ]
+    },
+    {
+      id:'j3', monde:'MONDE 3', mondeNum:3, jour:'SAM 15 AOÛT',
+      titre:'SAMEDI 15 AOÛT', tag:'JOUR DES BOSS',
+      ouverture:'Site ouvert 11h → 23h. Jour férié, très forte affluence.',
+      question:'Deux boss, une seule journée. Tu prends lequel ?',
+      note:'Deux finales le même jour. Il faut sacrifier quelque chose.',
+      options:[
+        {id:'j3a', label:'🏆 DROP, PUIS BOSS FINAL', sub:'PUBG Mobile 13h→17h50, puis FINALE Rainbow Six 17h50→21h30',
+         recap:'PUBG Mobile 13h→17h50, puis FINALE Rainbow Six 17h50→21h30', mood:'hype', sacrifie:'la finale des échecs'},
+        {id:'j3b', label:'👑 DOUBLE BOSS', sub:'FINALE Échecs 13h→19h30, puis la fin de la FINALE Rainbow Six',
+         recap:'FINALE Échecs 13h→19h30, puis la fin de la FINALE Rainbow Six', mood:'focus', sacrifie:'le début de la finale Rainbow Six'},
+        {id:'j3c', label:'🎯 AUCUNE PAUSE, AUCUN REGRET', sub:'FINALE Rainbow Six en entier, 14h→21h30',
+         recap:'FINALE Rainbow Six en entier, 14h→21h30', mood:'hype', sacrifie:'PUBG Mobile'},
+        {id:'j3d', label:'🚗 DEMI-FINALES ROCKET LEAGUE', sub:'16h→20h05',
+         recap:'Demi-finales Rocket League 16h→20h05', mood:'chill', sacrifie:'les deux finales du jour'}
+      ]
+    },
+    {
+      id:'j4', monde:'MONDE 4', mondeNum:4, jour:'DIM 16 AOÛT',
+      titre:'DIMANCHE 16 AOÛT', tag:'RAID FINAL',
+      ouverture:'Site ouvert 11h → 23h',
+      question:'Dernier jour. Comment tu veux que ça se termine ?',
+      note:'Les deux grandes finales se chevauchent de 16h à 17h50. On ne peut pas voir les deux fins.',
+      options:[
+        {id:'j4a', label:'🏆 LE RAID FINAL', sub:'GRANDE FINALE Rocket League, 16h→19h50, Bo7',
+         recap:'GRANDE FINALE Rocket League 16h→19h50, Bo7', mood:'hype', sacrifie:'la grande finale PUBG Mobile'},
+        {id:'j4b', label:'⏱️ SPEEDRUN 2 FINALES', sub:'GRANDE FINALE PUBG 13h→16h, puis tu rejoins la finale Rocket League déjà lancée',
+         recap:'GRANDE FINALE PUBG 13h→16h, puis la finale Rocket League déjà lancée', mood:'hype', sacrifie:'la fin de la grande finale PUBG Mobile'},
+        {id:'j4c', label:'🍗 CHICKEN DINNER', sub:'GRANDE FINALE PUBG Mobile en entier, 13h→17h50',
+         recap:'GRANDE FINALE PUBG Mobile en entier, 13h→17h50', mood:'chill', sacrifie:'la grande finale Rocket League'}
+      ]
+    },
+    {
+      id:'placement', badge:'POSITION', titre:'TU TE POSES OÙ ?',
+      // écran conditionnel : masqué si le MONDE 4 est réglé sur j4c
+      condition: a => a.j4 !== 'j4c',
+      question:'Le raid final, tu le regardes depuis quel point de la salle ?',
+      options:[
+        {id:'pl1', label:'🥇 FRONT ROW', sub:'Collé à la scène. Tu vois la sueur.', recap:'FRONT ROW', mood:'hype'},
+        {id:'pl2', label:'🥈 VUE DE COMMANDANT', sub:'Bien placé, écran géant dans l\'axe.', recap:'VUE DE COMMANDANT', mood:'focus'},
+        {id:'pl3', label:'🥉 SPAWN ALÉATOIRE', sub:'Zéro exigence. Je suis dans la salle, ça me va.', recap:'SPAWN ALÉATOIRE', mood:'chill'}
+      ]
+    },
+    {
+      id:'mission', badge:'MISSION PERSO', titre:'OBJECTIF N°1',
+      question:'Ton objectif n°1 du séjour ?',
+      texte:{ label:'GG. Un dernier truc à ajouter au loadout ?', max:200,
+              placeholder:'Écris ici, ou laisse vide. Personne ne te juge.' },
+      options:[
+        {id:'m1', label:'🏆 VOIR KC SOULEVER LE TROPHÉE', sub:'Karmine Corp défend son titre Rocket League',
+         recap:'VOIR KC SOULEVER LE TROPHÉE', mood:'hype'},
+        {id:'m2', label:'♟️ VOIR CARLSEN EN VRAI', sub:'Le n°1 mondial est là', recap:'VOIR CARLSEN EN VRAI', mood:'focus'},
+        {id:'m3', label:'🕹️ GRIND LE FAN FEST', sub:'Des centaines de PC, consoles et setups mobile en accès libre',
+         recap:'GRIND LE FAN FEST', mood:'chill'},
+        {id:'m4', label:'📸 CHASSE AU CRÉATEUR', sub:'Stands des clubs, meet & greet', recap:'CHASSE AU CRÉATEUR', mood:'hype'}
+      ]
+    }
+  ]
+};
+
+/* ===================== ÉTAT (mémoire seule) ===================== */
+const answers = {};          // { j1:'j1a', ..., mission:'m1' }
+let libre = '';              // champ texte
+let step = -2;               // -2 lobby, -1 règle, 0..n écrans, 99 final
+let mood = 'chill';
+
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const visibles = () => CONFIG.ecrans.filter(e => !e.condition || e.condition(answers));
+const opt = (e,id) => e.options.find(o => o.id === id);
+
+/* ===================== PERSONNAGE BLOC ===================== */
+function blocky(big){
+  return `<svg class="blocky${big?' big':''} m-${mood}" viewBox="0 0 100 124" aria-hidden="true">
+    <g class="bk-all">
+      <rect class="bk-pants bk-leg" x="33" y="95" width="15" height="24" rx="3"/>
+      <rect class="bk-pants bk-leg" x="52" y="95" width="15" height="24" rx="3"/>
+      <rect class="bk-arm bk-arm-l bk-shirt" x="14" y="60" width="13" height="30" rx="4"/>
+      <rect class="bk-arm bk-arm-r bk-shirt" x="73" y="60" width="13" height="30" rx="4"/>
+      <rect class="bk-shirt" x="29" y="59" width="42" height="38" rx="5"/>
+      <ellipse class="bk-skin" cx="50" cy="9" rx="11" ry="5"/>
+      <rect class="bk-skin" x="27" y="8" width="46" height="16" rx="3"/>
+      <rect class="bk-skin" x="25" y="20" width="50" height="39" rx="6"/>
+      <rect class="bk-brow" x="34" y="30" width="12" height="4" rx="2"/>
+      <rect class="bk-brow" x="54" y="30" width="12" height="4" rx="2"/>
+      <rect class="bk-eye" x="35" y="35" width="9" height="11" rx="2"/>
+      <rect class="bk-eye" x="56" y="35" width="9" height="11" rx="2"/>
+      <rect class="bk-mouth" x="42" y="50" width="16" height="5" rx="2.5"/>
+    </g></svg>`;
+}
+function setMood(m){
+  mood = m || 'chill';
+  document.querySelectorAll('.blocky').forEach(s => {
+    s.className = 'blocky' + (s.classList.contains('big') ? ' big' : '') + ' m-' + mood;
+    const g = s.querySelector('.bk-all');
+    g.classList.remove('pop'); void g.offsetWidth; g.classList.add('pop');
+  });
+}
+
+/* ===================== HUD + XP ===================== */
+function mondesFaits(){ return ['j1','j2','j3','j4'].filter(k => answers[k]).length; }
+function renderHud(){
+  $('#srvTag').innerHTML = `${esc(CONFIG.serveur)}<b>partie privée</b>`;
+  $('#hud').innerHTML =
+    `<table><tr><td class="h">JOUEUR</td><td class="h">MONDES</td></tr>
+     <tr><td class="v">${esc(CONFIG.joueur)}</td><td class="v">${mondesFaits()}/4</td></tr>
+     <tr><td class="v2">${esc(CONFIG.hote)}</td><td class="v2">hôte</td></tr></table>`;
+  const list = visibles();
+  const done = list.filter(e => answers[e.id]).length;
+  const pct = step === 99 ? 100 : Math.round(done / list.length * 100);
+  $('#xpFill').style.width = pct + '%';
+  $('#xpTxt').textContent = step === 99 ? 'LOADOUT COMPLET' : done + ' / ' + list.length;
+  $('#xpWrap').classList.toggle('hidden', step < 0);
+}
+
+/* ===================== TOAST ===================== */
+let toastT;
+function toast(t, s){
+  const el = $('#toast');
+  el.querySelector('.t').textContent = t;
+  el.querySelector('.s').textContent = s || '';
+  el.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ===================== TICKER D'ASTUCES ===================== */
+let tickI = 0;
+function tick(){
+  $('#ticker').innerHTML = '<b>&gt;</b> ' + esc(CONFIG.astuces[tickI % CONFIG.astuces.length]);
+  tickI++;
+}
+tick(); setInterval(tick, 5200);
+
+/* ===================== ÉCRANS ===================== */
+function vueLobby(){
+  return `<div class="card">
+    <div class="head">
+      <div class="head-txt">
+        <span class="badge">CONNEXION AU SERVEUR…</span>
+        <p class="chat">
+          <span class="sys">Serveur :</span> ${esc(CONFIG.serveur)}<br>
+          <span class="hi">${esc(CONFIG.hote)}</span> a créé une partie privée :<br>
+          « ${esc(CONFIG.partie)} »<br>
+          <span class="you">${esc(CONFIG.joueur)}</span> a été invité. 1/2 joueurs.<br>
+          <span class="sys">en attente</span><span class="caret">&nbsp;</span>
+        </p>
+      </div>
+      ${blocky(false)}
+    </div>
+    <div style="height:14px"></div>
+    <button class="btn" data-go="rule">[ REJOINDRE ]</button>
+  </div>
+  <p class="mini center">6 questions. 2 minutes. Aucune sauvegarde, alors va jusqu'au bout.</p>`;
+}
+
+function vueRegle(){
+  return `<div class="card center">
+    <span class="badge alt">RÈGLE N°1</span>
+    <div class="big-rule">TU PEUX PAS ÊTRE DANS DEUX SERVEURS À LA FOIS.</div>
+    <p class="chat" style="text-align:left">
+      <span class="hi">${esc(CONFIG.hote)}</span> a essayé. Ça marche pas.<br>
+      <span class="sys">4 scènes tournent en parallèle. Tu en choisis une par créneau.</span>
+    </p>
+    <div style="display:flex;justify-content:center;margin:6px 0 12px">${blocky(true)}</div>
+    <button class="btn cy" data-go="start">[ CONFIGURER LE LOADOUT ]</button>
+  </div>`;
+}
+
+function vueEcran(e){
+  const choisi = answers[e.id];
+  const opts = e.options.map(o =>
+    `<button class="opt${choisi === o.id ? ' on' : ''}" data-pick="${o.id}" aria-pressed="${choisi === o.id}">
+       <span class="lab">${esc(o.label)}</span><span class="sub">${esc(o.sub)}</span>
+     </button>`).join('');
+
+  const tete = e.monde
+    ? `<span class="badge">${esc(e.monde)}${e.tag ? ' — ' + esc(e.tag) : ''}</span>
+       <h1>${esc(e.titre)}</h1><p class="open">${esc(e.ouverture)}</p>`
+    : `<span class="badge alt">${esc(e.badge)}</span><h1>${esc(e.titre)}</h1>`;
+
+  const zone = e.texte ? `
+    <label class="fl" for="libre">${esc(e.texte.label)}</label>
+    <textarea id="libre" maxlength="${e.texte.max}" placeholder="${esc(e.texte.placeholder)}">${esc(libre)}</textarea>
+    <div class="count"><span id="cc">${libre.length}</span> / ${e.texte.max}</div>` : '';
+
+  return `<div class="card">
+    <div class="head"><div class="head-txt">${tete}</div>${blocky(false)}</div>
+    <p class="q">${esc(e.question)}</p>
+    ${opts}
+    ${e.note ? `<p class="note">${esc(e.note)}</p>` : ''}
+    ${zone}
+  </div>
+  <div class="row">
+    <button class="btn ghost" data-go="back">← RETOUR</button>
+    <button class="btn ${choisi ? 'cy' : 'ghost'}" data-go="next" ${choisi ? '' : 'disabled'}>SUITE →</button>
+  </div>`;
+}
+
+function ligneRecap(e){
+  const o = opt(e, answers[e.id]);
+  if (!o) return '';
+  const k = e.monde ? e.jour : (e.id === 'placement' ? 'PLACEMENT' : 'MISSION PERSO');
+  // seuls les jours portent des horaires ; placement et mission se suffisent à leur libellé
+  const detail = e.monde ? `<div class="d">${esc(o.recap)}</div>` : '';
+  return `<div class="line"><div class="k">${esc(k)}</div>
+    <div class="v">${esc(o.label)}</div>${detail}</div>`;
+}
+
+function vueFinal(){
+  const lignes = visibles().map(ligneRecap).join('');
+  const note = libre.trim()
+    ? `<div class="line"><div class="k">AJOUT AU LOADOUT</div><div class="d" style="margin-top:6px">${esc(libre.trim())}</div></div>`
+    : '';
+  return `<div class="card">
+    <div class="head"><div class="head-txt">
+      <span class="badge">LOADOUT VALIDÉ</span>
+      <h2 style="color:var(--lime)">4 JOURS VERROUILLÉS</h2>
+      <p class="chat"><span class="you">${esc(CONFIG.joueur)}</span> a quitté le lobby.<br>
+      <span class="sys">Transmission à ${esc(CONFIG.hote)}…</span></p>
+    </div>${blocky(false)}</div>
+    <div style="height:12px"></div>
+    <div class="rec">${lignes}${note}</div>
+    <div style="height:14px"></div>
+    <button class="btn" data-go="copy">[ COPIER MON PROGRAMME ]</button>
+    <div style="height:10px"></div>
+    <button class="btn cy" data-go="wa">[ ENVOYER À ${esc(CONFIG.hote.toUpperCase())} ]</button>
+    <div style="height:12px"></div>
+    <button class="btn ghost" data-go="back">← MODIFIER UN CHOIX</button>
+  </div>`;
+}
+
+/* ===================== TEXTE À COPIER ===================== */
+function texteFinal(){
+  const L = [];
+  L.push('LOADOUT ' + CONFIG.serveur + ' — ' + CONFIG.partie);
+  L.push('Joueur : ' + CONFIG.joueur + '  |  Hôte : ' + CONFIG.hote);
+  L.push('');
+  visibles().forEach(e => {
+    const o = opt(e, answers[e.id]); if (!o) return;
+    if (e.monde){ L.push(e.jour + ' — ' + o.label); L.push('  ' + o.recap); }
+    else if (e.id === 'placement'){ L.push('PLACEMENT : ' + o.label); }
+    else { L.push('MISSION : ' + o.label); }
+  });
+  if (libre.trim()){ L.push(''); L.push('EN PLUS : ' + libre.trim()); }
+  L.push('');
+  L.push('Une seule scène à la fois. Règle n°1.');
+  return L.join('\n');
+}
+
+/* ===================== NAVIGATION ===================== */
+function render(){
+  const list = visibles();
+  if (step === -2) app.innerHTML = vueLobby();
+  else if (step === -1) app.innerHTML = vueRegle();
+  else if (step === 99) app.innerHTML = vueFinal();
+  else app.innerHTML = vueEcran(list[Math.min(step, list.length - 1)]);
+  renderHud();
+  window.scrollTo(0, 0);
+  const ta = $('#libre');
+  if (ta) ta.addEventListener('input', () => { libre = ta.value; $('#cc').textContent = libre.length; });
+}
+
+app.addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const list = visibles();
+  const cur = step >= 0 && step < 90 ? list[Math.min(step, list.length - 1)] : null;
+
+  if (b.dataset.pick && cur){
+    const o = opt(cur, b.dataset.pick);
+    answers[cur.id] = o.id;
+    // si le MONDE 4 bascule sur l'option qui saute l'écran de placement, on purge la réponse devenue caduque
+    if (cur.id === 'j4' && o.id === 'j4c') delete answers.placement;
+    render();
+    setMood(o.mood);
+    const titre = cur.monde
+      ? `SUCCÈS DÉBLOQUÉ — MONDE ${cur.mondeNum} VERROUILLÉ 🏆`
+      : (cur.id === 'placement' ? 'SUCCÈS DÉBLOQUÉ — POSITION VERROUILLÉE 🏆'
+                                : 'SUCCÈS DÉBLOQUÉ — MISSION ACCEPTÉE 🏆');
+    toast(titre, o.sacrifie ? `tu as sacrifié ${o.sacrifie}. ${CONFIG.hote} a vu.` : '');
+    return;
+  }
+
+  switch (b.dataset.go){
+    case 'rule':  step = -1; render(); break;
+    case 'start': step = 0;  render(); break;
+    case 'next':
+      if (!answers[cur.id]) return;
+      step = (step + 1 >= visibles().length) ? 99 : step + 1;
+      render(); break;
+    case 'back':
+      if (step === 99) step = visibles().length - 1;
+      else if (step === 0) step = -1;
+      else if (step === -1) step = -2;
+      else step -= 1;
+      render(); break;
+    case 'copy': copier(b); break;
+    case 'wa':   window.open('https://wa.me/?text=' + encodeURIComponent(texteFinal()), '_blank', 'noopener'); break;
+  }
+});
+
+async function copier(btn){
+  const txt = texteFinal();
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; }
+  catch(_){
+    // repli pour une page ouverte en local, où l'API presse-papier peut être bloquée
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+    ta.remove();
+  }
+  btn.textContent = ok ? '[ COPIÉ ✅ ]' : '[ SÉLECTIONNE ET COPIE À LA MAIN ]';
+  setTimeout(() => { btn.textContent = '[ COPIER MON PROGRAMME ]'; }, 2200);
+  toast(ok ? 'PROGRAMME DANS LE PRESSE-PAPIER 🏆' : 'PRESSE-PAPIER REFUSÉ',
+        ok ? `Colle-le à ${CONFIG.hote}, il attend.` : 'Ton navigateur bloque. Copie le récapitulatif à la main.');
+}
+
+render();
+</script>
+</body>
+</html>
