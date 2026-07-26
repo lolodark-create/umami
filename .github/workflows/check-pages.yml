@@ -1,0 +1,44 @@
+name: Check pages status
+
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/ewc-paris-quiz-2xm25s
+
+      - name: Probe the published site
+        run: |
+          URL=https://lolodark-create.github.io/umami/
+          {
+            echo "sonde du $(date -u +%FT%TZ)"
+            echo "url: $URL"
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              code=$(curl -s -o /tmp/p.html -w '%{http_code}' -L "$URL" || echo 000)
+              echo "tentative $i -> HTTP $code"
+              if [ "$code" = "200" ]; then
+                echo "content-type: $(curl -sI -L "$URL" | tr -d '\r' | grep -i '^content-type:')"
+                echo "octets: $(wc -c < /tmp/p.html)"
+                echo "premiers octets:"
+                head -c 160 /tmp/p.html
+                echo
+                break
+              fi
+              sleep 20
+            done
+          } > PAGES-STATUS.txt 2>&1
+          cat PAGES-STATUS.txt
+
+      - name: Report back into the branch
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add PAGES-STATUS.txt
+          git commit -m "Record the Pages probe result" || exit 0
+          git push origin HEAD:claude/ewc-paris-quiz-2xm25s
